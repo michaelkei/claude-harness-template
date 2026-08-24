@@ -27,11 +27,19 @@ deny に入れる項目（先頭の // は「パソコン全体」を意味し�
 - Read(//**/.aws/**) / Edit(//**/.aws/**)
 - Read(//**/*.pem) / Edit(//**/*.pem)
 - Read(//**/.env) / Read(//**/.env.*) / Edit(//**/.env) / Edit(//**/.env.*)
-- Bash(rm -rf *) / Bash(rm -r *)
+- Bash(rm -rf *) / Bash(rm -r *) / Bash(rm -fr *)
 - Bash(sudo *)
 - Bash(curl * | sh) / Bash(curl * | bash)
 - Bash(git push --force*) / Bash(git push -f*)
 - Bash(git reset --hard*) / Bash(git clean -fd*) / Bash(git clean -f*)
+
+Windows の方は、上の Bash(...) をそのまま入れたうえで、次の PowerShell(...) も追加してください。
+Windows では Claude Code が PowerShell を主なシェルとして使うため、Bash(...) だけでは素通りします:
+- PowerShell(Remove-Item *)
+- PowerShell(Invoke-Expression *)
+- PowerShell(sudo *) / PowerShell(Start-Process *RunAs*)
+- PowerShell(git push --force*) / PowerShell(git push -f*)
+- PowerShell(git reset --hard*) / PowerShell(git clean -fd*) / PowerShell(git clean -f*)
 
 Write(...) というルールは追加しないでください（Claude Code の仕様上そのルールは照合されず、
 起動時に警告が出ます）。Edit(...) が書き込み系すべてをカバーします。
@@ -72,7 +80,7 @@ Write(...) というルールは追加しないでください（Claude Code の
 ```
 このプロジェクト内の security/block-dangerous-commands.js を、私の Claude 設定の
 スクリプト用ディレクトリ（~/.claude/scripts/ ）にコピーしてください。
-次に ~/.claude/settings.json の hooks.PreToolUse に、matcher "Bash" で
+次に ~/.claude/settings.json の hooks.PreToolUse に、matcher "Bash|PowerShell" で
 「node <コピー先の絶対パス>」を実行する hook として登録してください
 （私のOSに合った正しい絶対パス表記で。既存の設定は壊さず追記）。
 登録後、Claude Code の再起動を促し、危険コマンド（例: rm -rf ./dummy）が
@@ -81,4 +89,6 @@ Write(...) というルールは追加しないでください（Claude Code の
 
 **完了確認**: Claude Code を再起動後、`rm -rf ./dummy` 等を依頼して「🚫 ブロック」と出れば成功。
 
-> このフックは deny と役割が重なる「保険」です。**1（deny）だけでも基準は満たしている**ので、入れなくても標準は確保されています。`sudo` と `curl | bash` は deny 側でブロック済みのため、このフックには含めていません（deny とフックで全体をカバーする設計）。
+> このフックは deny と役割が重なる「保険」です。**1（deny）だけでも標準は確保されますが、1と2の両方を入れるのが確実です。**
+> deny の `Bash(...)` は書いた文字列の前方一致で判定するため、`rm -rf` と書いたルールはフラグの綴りを変えた形（`rm -fR` など）までは捕まえません。2 のフックは正規表現で判定するので、そうした書き換えにも反応します。
+> （Windows 側の `PowerShell(...)` はエイリアスを正規化して判定するので、`Remove-Item` と書いたルールが `rm` `del` `erase` にも効きます）`sudo` と `curl | bash` は deny 側でブロック済みのため、このフックには含めていません（deny とフックで全体をカバーする設計）。

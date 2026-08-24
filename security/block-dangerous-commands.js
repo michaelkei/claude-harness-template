@@ -28,6 +28,12 @@ process.stdin.on("end", () => {
     [/git\s+clean\s+-[a-zA-Z]*f/, "git clean -f は禁止されています"],
     [/(cat|less|more|head|tail|source|\.)\s+.*\.env/, ".envファイルへのアクセスは禁止されています"],
     [/(cat|less|more|head|tail)\s+.*\.ssh\/id_/, "SSH秘密鍵へのアクセスは禁止されています"],
+    // --- PowerShell 系（Windows では Claude Code が PowerShell を主なシェルとして使う） ---
+    [/(^|[;&|]\s*)(Remove-Item|ri|rd|rmdir|del|erase)\b[^|;&]*\s-(Recurse|Force|r\b|fo\b)/i, "Remove-Item の再帰・強制削除は禁止されています"],
+    [/(Invoke-Expression\b|\|\s*iex\b)/i, "ダウンロードしたスクリプトの実行（Invoke-Expression / iex）は禁止されています"],
+    [/(Get-Content|gc|type)\s+[^|;&]*\.env/i, ".envファイルへのアクセスは禁止されています"],
+    [/(Get-Content|gc|type)\s+[^|;&]*\.ssh[\\/]id_/i, "SSH秘密鍵へのアクセスは禁止されています"],
+    [/Start-Process\b[^|;&]*-Verb\s+RunAs/i, "管理者権限での実行（Start-Process -Verb RunAs）は禁止されています"],
   ];
 
   for (const [re, msg] of rules) {
