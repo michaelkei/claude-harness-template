@@ -35,7 +35,15 @@ deny に入れる項目（先頭の // は「パソコン全体」を意味し�
 
 Write(...) というルールは追加しないでください（Claude Code の仕様上そのルールは照合されず、
 起動時に警告が出ます）。Edit(...) が書き込み系すべてをカバーします。
+
+あわせて、同じ settings.json のトップレベルに次の2つも入れてください:
+- "cleanupPeriodDays": 30
+- "env": { "DISABLE_FEEDBACK_COMMAND": "1" }
 ```
+
+> **この2つは何をしているか**
+> - `cleanupPeriodDays` … PCの中に残る会話ログ（`~/.claude/projects/`）の保存日数。既定と同じ30日を明示しておき、短くしたい人は数字を変えるだけで済むようにしています
+> - `DISABLE_FEEDBACK_COMMAND` … `/feedback`・`/bug`・`/share` を無効にします。これらはClaude Code自体の不具合をAnthropicに報告するコマンドで、**打つと会話履歴（AIが読んだファイルの中身を含む）が送信され5年間保持**されます。業務データを扱う人が誤って打たないよう、最初から止めておきます
 
 **完了確認**: `~/.claude/settings.json` に `deny` と `disableBypassPermissionsMode: "disable"` が入っていればOK。
 
